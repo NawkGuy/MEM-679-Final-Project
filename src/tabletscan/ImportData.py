@@ -2,12 +2,31 @@ import os
 import shutil
 from pathlib import Path
 import random
+from datafed.CommandLib import API
+import zipfile
 
-# Define paths
-base_dir = Path("c:/Users/Admin/OneDrive/Documents/Drexel/MEM679/nCTData")
+# Download data files from DataFed
+df_api = API()
+datapath = os.getcwd() #directory where Globus Endpoint has access
+
+get_resp = df_api.dataGet(
+    'd/525646261',
+    datapath,  # directory where data should be downloaded  
+    wait=True,  
+)
+print(get_resp)
+
+# Unzip Folder
+with zipfile.ZipFile(datapath + "/525646261.zip", "r") as zip_ref:
+    print("Unzipping nCT Scans")
+    zip_ref.extractall(datapath)
+
+#Split Data into Test and Train Sets
+base_dir = Path("data/") # Location where you want data to go
 train_dir = base_dir / "train"
 test_dir = base_dir / "test"
 categories = ["70MPa", "200MPa"]
+source_dir = Path(datapath) # Location where you downloaded data
 
 # Create directory structure
 for split in ["train", "test"]:
@@ -44,9 +63,6 @@ def split_and_move_images(source_dir, train_dir, test_dir, categories, train_rat
                 dest_dir.parent.mkdir(parents=True, exist_ok=True)
             print(f"[INFO] Copying {img} to {dest_dir}...")
             shutil.copy2(img, dest_dir)
-
-# Define source directory
-source_dir = Path("c:/Users/Admin/OneDrive/Documents/Drexel/MEM679/datapath/TabletScans")
 
 # Split and move images
 split_and_move_images(source_dir, train_dir, test_dir, categories)
